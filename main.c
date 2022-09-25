@@ -1,7 +1,9 @@
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
-#include <string.h>
+#ifndef __SANDEROSUSB
+    #include <stdlib.h>
+    #include <stdio.h>
+    #include <stdint.h>
+    #include <string.h>
+#endif
 
 // reference manual: http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 // emulator: https://chip.netlify.app/emulator/
