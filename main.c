@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
+#ifdef __SANDEROSUSB
+#include <SanderOS.h>
+#endif
 
 // reference manual: http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
 // emulator: https://chip.netlify.app/emulator/
@@ -31,6 +34,7 @@ void chip8_reset_hardware(){
         free(hardware);
     }
     hardware = (CHIP8Hardware*) malloc(sizeof(CHIP8Hardware));
+    memset(hardware,0,sizeof(CHIP8Hardware));
     hardware->pc = 0x200;
 
     for(int i = 0 ; i < (SCREEN_HEIGHT*SCREEN_WIDTH) ; i++){
@@ -66,6 +70,7 @@ void debug(){
         printf("V%x:%x ",i,hardware->v[i]);
     }
     printf("\n");
+    #ifndef __SANDEROSUSB
     printf("Memory: \n");
     for(int i = 0 ; i < MAX_MEMORY_SIZE ; i++){
         printf("%x ",hardware->memory[i]);
@@ -79,6 +84,7 @@ void debug(){
         printf("\n");
     }
     printf("\n");
+    #endif
 }
 
 uint16_t chip8_fetch_instruction(){
@@ -92,6 +98,17 @@ uint16_t chip8_get_instruction_code_from_instruction(uint16_t instruction){
 
 uint16_t chip8_get_argument_from_instruction(uint16_t instruction){
     return instruction & 0x0FFF;
+}
+
+void chip8_write_to_video(int x,int y,int z){
+    int a = (y*SCREEN_WIDTH)+x; 
+    if( hardware->video[a]=='X' && z==1 ){
+        hardware->v[15] = 1;
+    } 
+    hardware->video[a] = z==1?'X':'-';
+    #ifdef __SANDEROSUSB
+    draw_pixel(x,y,z==1?0x00000000:0xFFFFFFFF);
+    #endif
 }
 
 int main(int argc,char** argv){
@@ -153,14 +170,14 @@ int main(int argc,char** argv){
             hardware->v[15] = 0;
             for(uint8_t i = 0 ; i < cntN ; i++ ){
                 uint8_t readvalue = hardware->memory[addr2read+i];
-                if( (readvalue & 0b10000000)!=0 ){ int x = ((valRegY+i)*SCREEN_WIDTH)+valRegX+0; if(hardware->video[x]=='X'){hardware->v[15] = 1;} hardware->video[x] = 'X';}
-                if( (readvalue & 0b01000000)!=0 ){ int x = ((valRegY+i)*SCREEN_WIDTH)+valRegX+1; if(hardware->video[x]=='X'){hardware->v[15] = 1;} hardware->video[x] = 'X';}
-                if( (readvalue & 0b00100000)!=0 ){ int x = ((valRegY+i)*SCREEN_WIDTH)+valRegX+2; if(hardware->video[x]=='X'){hardware->v[15] = 1;} hardware->video[x] = 'X';}
-                if( (readvalue & 0b00010000)!=0 ){ int x = ((valRegY+i)*SCREEN_WIDTH)+valRegX+3; if(hardware->video[x]=='X'){hardware->v[15] = 1;} hardware->video[x] = 'X';}
-                if( (readvalue & 0b00001000)!=0 ){ int x = ((valRegY+i)*SCREEN_WIDTH)+valRegX+4; if(hardware->video[x]=='X'){hardware->v[15] = 1;} hardware->video[x] = 'X';}
-                if( (readvalue & 0b00000100)!=0 ){ int x = ((valRegY+i)*SCREEN_WIDTH)+valRegX+5; if(hardware->video[x]=='X'){hardware->v[15] = 1;} hardware->video[x] = 'X';}
-                if( (readvalue & 0b00000010)!=0 ){ int x = ((valRegY+i)*SCREEN_WIDTH)+valRegX+6; if(hardware->video[x]=='X'){hardware->v[15] = 1;} hardware->video[x] = 'X';}
-                if( (readvalue & 0b00000001)!=0 ){ int x = ((valRegY+i)*SCREEN_WIDTH)+valRegX+7; if(hardware->video[x]=='X'){hardware->v[15] = 1;} hardware->video[x] = 'X';}
+                if( (readvalue & 0b10000000)!=0 ){ chip8_write_to_video(valRegX+0,((valRegY+i)*SCREEN_WIDTH),1); }
+                if( (readvalue & 0b01000000)!=0 ){ chip8_write_to_video(valRegX+1,((valRegY+i)*SCREEN_WIDTH),1); }
+                if( (readvalue & 0b00100000)!=0 ){ chip8_write_to_video(valRegX+2,((valRegY+i)*SCREEN_WIDTH),1); }
+                if( (readvalue & 0b00010000)!=0 ){ chip8_write_to_video(valRegX+3,((valRegY+i)*SCREEN_WIDTH),1); }
+                if( (readvalue & 0b00001000)!=0 ){ chip8_write_to_video(valRegX+4,((valRegY+i)*SCREEN_WIDTH),1); }
+                if( (readvalue & 0b00000100)!=0 ){ chip8_write_to_video(valRegX+5,((valRegY+i)*SCREEN_WIDTH),1); }
+                if( (readvalue & 0b00000010)!=0 ){ chip8_write_to_video(valRegX+6,((valRegY+i)*SCREEN_WIDTH),1); }
+                if( (readvalue & 0b00000001)!=0 ){ chip8_write_to_video(valRegX+7,((valRegY+i)*SCREEN_WIDTH),1); }
             }
             hardware->pc += 2;
         }else if(instruction==15&&(argument&0xFF)==0x1E){
