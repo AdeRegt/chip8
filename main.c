@@ -27,8 +27,11 @@ typedef struct{
     uint8_t sound_timer;
     uint8_t delay_timer;
     uint8_t sp;
+    uint16_t stack[15];
     uint16_t pc;
     uint8_t video[SCREEN_HEIGHT*SCREEN_WIDTH];
+    uint8_t keyboard;
+    uint8_t is_key_pressed;
 }CHIP8Hardware;
 
 CHIP8Hardware *hardware;
@@ -134,18 +137,83 @@ int main(int argc,char** argv){
         exit(EXIT_FAILURE);
     }
     while(1){
+        hardware->delay_timer--;
+        hardware->keyboard = scan_for_character();
+        if(hardware->keyboard=='1'){
+            hardware->keyboard = 1;
+        }
+        if(hardware->keyboard=='2'){
+            hardware->keyboard = 2;
+        }
+        if(hardware->keyboard=='3'){
+            hardware->keyboard = 3;
+        }
+        if(hardware->keyboard=='4'){
+            hardware->keyboard = 4;
+        }
+        if(hardware->keyboard=='5'){
+            hardware->keyboard = 5;
+        }
+        if(hardware->keyboard=='6'){
+            hardware->keyboard = 6;
+        }
+        if(hardware->keyboard=='7'){
+            hardware->keyboard = 7;
+        }
+        if(hardware->keyboard=='8'){
+            hardware->keyboard = 8;
+        }
+        if(hardware->keyboard=='9'){
+            hardware->keyboard = 9;
+        }
+        if(hardware->keyboard=='a'){
+            hardware->keyboard = 0xa;
+        }
+        if(hardware->keyboard=='b'){
+            hardware->keyboard = 0xb;
+        }
+        if(hardware->keyboard=='c'){
+            hardware->keyboard = 0xc;
+        }
+        if(hardware->keyboard=='d'){
+            hardware->keyboard = 0xd;
+        }
+        if(hardware->keyboard=='e'){
+            hardware->keyboard = 0xe;
+        }
+        if(hardware->keyboard=='f'){
+            hardware->keyboard = 0xf;
+        }
+        if(hardware->keyboard=='q'){
+            break;
+        }
+        hardware->is_key_pressed = 1;
         uint16_t combined_instruction = chip8_fetch_instruction();
         uint16_t instruction = chip8_get_instruction_code_from_instruction(combined_instruction);
         uint16_t argument = chip8_get_argument_from_instruction(combined_instruction);
-        if(instruction==1){
+        if(combined_instruction==0x00EE){
+            hardware->sp--;
+            argument = hardware->stack[hardware->sp];
+            hardware->stack[hardware->sp] = 0;
+            hardware->pc = argument;
+            hardware->pc += 2;
+        }else if(instruction==1){
             hardware->pc = argument;
         }else if(instruction==2){
+            hardware->stack[hardware->sp++] = hardware->pc;
             hardware->pc = argument;
-            // @TODO :: NEED TO DO SOMETHING WITH THE STACK
         }else if(instruction==3){
             uint8_t vpointer = argument>>8;
             uint8_t vales = argument & 0xFF;
             if(hardware->v[vpointer] == vales){
+                hardware->pc += 4;
+            }else{
+                hardware->pc += 2;
+            }
+        }else if(instruction==4){
+            uint8_t vpointer = argument>>8;
+            uint8_t vales = argument & 0xFF;
+            if(hardware->v[vpointer] != vales){
                 hardware->pc += 4;
             }else{
                 hardware->pc += 2;
@@ -178,19 +246,45 @@ int main(int argc,char** argv){
             hardware->v[15] = 0;
             for(uint8_t i = 0 ; i < cntN ; i++ ){
                 uint8_t readvalue = hardware->memory[addr2read+i];
-                if( (readvalue & 0b10000000)!=0 ){ chip8_write_to_video(valRegX+0,valRegY+i,1); }
-                if( (readvalue & 0b01000000)!=0 ){ chip8_write_to_video(valRegX+1,valRegY+i,1); }
-                if( (readvalue & 0b00100000)!=0 ){ chip8_write_to_video(valRegX+2,valRegY+i,1); }
-                if( (readvalue & 0b00010000)!=0 ){ chip8_write_to_video(valRegX+3,valRegY+i,1); }
-                if( (readvalue & 0b00001000)!=0 ){ chip8_write_to_video(valRegX+4,valRegY+i,1); }
-                if( (readvalue & 0b00000100)!=0 ){ chip8_write_to_video(valRegX+5,valRegY+i,1); }
-                if( (readvalue & 0b00000010)!=0 ){ chip8_write_to_video(valRegX+6,valRegY+i,1); }
-                if( (readvalue & 0b00000001)!=0 ){ chip8_write_to_video(valRegX+7,valRegY+i,1); }
+                if( (readvalue & 0b10000000)!=0 ){ chip8_write_to_video(valRegX+0,valRegY+i,1); }else{ chip8_write_to_video(valRegX+0,valRegY+i,0); }
+                if( (readvalue & 0b01000000)!=0 ){ chip8_write_to_video(valRegX+1,valRegY+i,1); }else{ chip8_write_to_video(valRegX+1,valRegY+i,0); }
+                if( (readvalue & 0b00100000)!=0 ){ chip8_write_to_video(valRegX+2,valRegY+i,1); }else{ chip8_write_to_video(valRegX+2,valRegY+i,0); }
+                if( (readvalue & 0b00010000)!=0 ){ chip8_write_to_video(valRegX+3,valRegY+i,1); }else{ chip8_write_to_video(valRegX+3,valRegY+i,0); }
+                if( (readvalue & 0b00001000)!=0 ){ chip8_write_to_video(valRegX+4,valRegY+i,1); }else{ chip8_write_to_video(valRegX+4,valRegY+i,0); }
+                if( (readvalue & 0b00000100)!=0 ){ chip8_write_to_video(valRegX+5,valRegY+i,1); }else{ chip8_write_to_video(valRegX+5,valRegY+i,0); }
+                if( (readvalue & 0b00000010)!=0 ){ chip8_write_to_video(valRegX+6,valRegY+i,1); }else{ chip8_write_to_video(valRegX+6,valRegY+i,0); }
+                if( (readvalue & 0b00000001)!=0 ){ chip8_write_to_video(valRegX+7,valRegY+i,1); }else{ chip8_write_to_video(valRegX+7,valRegY+i,0); }
             }
+            hardware->pc += 2;
+        }else if(instruction==14&&(argument&0xFF)==0xA1){
+            uint8_t vpointerA = argument>>8 & 0xF;
+            uint8_t keytocheck= hardware->v[vpointerA];
+            if(!(hardware->is_key_pressed==1&&hardware->keyboard==keytocheck)){
+                hardware->pc += 4;
+            }else{
+                hardware->pc += 2;
+            }
+        }else if(instruction==15&&(argument&0xFF)==0x07){
+            uint8_t vpointer = argument>>8;
+            hardware->v[vpointer] = hardware->delay_timer;
+            hardware->pc += 2;
+        }else if(instruction==15&&(argument&0xFF)==0x0A){
+            uint8_t vpointer = argument>>8;
+            hardware->v[vpointer] = wait_for_character();
+            hardware->pc += 2;
+        }else if(instruction==15&&(argument&0xFF)==0x15){
+            uint8_t vpointer = argument>>8;
+            hardware->delay_timer = hardware->v[vpointer];
             hardware->pc += 2;
         }else if(instruction==15&&(argument&0xFF)==0x1E){
             uint8_t vpointer = argument>>8;
             hardware->I += hardware->v[vpointer];
+            hardware->pc += 2;
+        }else if(instruction==15&&(argument&0xFF)==0x65){
+            uint8_t vpointer = argument>>8;
+            for(int i = 0 ; i < vpointer ; i++){
+                hardware->v[i] = hardware->memory[hardware->I+i];
+            }
             hardware->pc += 2;
         }else{
             printf("invalid instruction: %x with argument: %x \n",instruction,argument);
