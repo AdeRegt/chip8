@@ -16,6 +16,10 @@
 
 #define REGISTER_V_SIZE 16
 
+#ifdef __SANDEROSUSB
+#define SCREEN_ENLARGEMENT 10
+#endif
+
 typedef struct{
     uint8_t memory[MAX_MEMORY_SIZE];
     uint8_t v[REGISTER_V_SIZE];
@@ -107,7 +111,11 @@ void chip8_write_to_video(int x,int y,int z){
     } 
     hardware->video[a] = z==1?'X':'-';
     #ifdef __SANDEROSUSB
-    draw_pixel(x,y,z==1?0x00000000:0xFFFFFFFF);
+    for(int ay = 0 ; ay < SCREEN_ENLARGEMENT ; ay++){
+        for(int ax = 0 ; ax < SCREEN_ENLARGEMENT ; ax++){
+            draw_pixel((x*SCREEN_ENLARGEMENT)+ax,(y*SCREEN_ENLARGEMENT)+ay,z==1?0x00000000:0xFFFFFFFF);
+        }
+    }
     #endif
 }
 
