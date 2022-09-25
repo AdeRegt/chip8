@@ -170,14 +170,14 @@ int main(int argc,char** argv){
             hardware->v[15] = 0;
             for(uint8_t i = 0 ; i < cntN ; i++ ){
                 uint8_t readvalue = hardware->memory[addr2read+i];
-                if( (readvalue & 0b10000000)!=0 ){ chip8_write_to_video(valRegX+0,((valRegY+i)*SCREEN_WIDTH),1); }
-                if( (readvalue & 0b01000000)!=0 ){ chip8_write_to_video(valRegX+1,((valRegY+i)*SCREEN_WIDTH),1); }
-                if( (readvalue & 0b00100000)!=0 ){ chip8_write_to_video(valRegX+2,((valRegY+i)*SCREEN_WIDTH),1); }
-                if( (readvalue & 0b00010000)!=0 ){ chip8_write_to_video(valRegX+3,((valRegY+i)*SCREEN_WIDTH),1); }
-                if( (readvalue & 0b00001000)!=0 ){ chip8_write_to_video(valRegX+4,((valRegY+i)*SCREEN_WIDTH),1); }
-                if( (readvalue & 0b00000100)!=0 ){ chip8_write_to_video(valRegX+5,((valRegY+i)*SCREEN_WIDTH),1); }
-                if( (readvalue & 0b00000010)!=0 ){ chip8_write_to_video(valRegX+6,((valRegY+i)*SCREEN_WIDTH),1); }
-                if( (readvalue & 0b00000001)!=0 ){ chip8_write_to_video(valRegX+7,((valRegY+i)*SCREEN_WIDTH),1); }
+                if( (readvalue & 0b10000000)!=0 ){ chip8_write_to_video(valRegX+0,valRegY+i,1); }
+                if( (readvalue & 0b01000000)!=0 ){ chip8_write_to_video(valRegX+1,valRegY+i,1); }
+                if( (readvalue & 0b00100000)!=0 ){ chip8_write_to_video(valRegX+2,valRegY+i,1); }
+                if( (readvalue & 0b00010000)!=0 ){ chip8_write_to_video(valRegX+3,valRegY+i,1); }
+                if( (readvalue & 0b00001000)!=0 ){ chip8_write_to_video(valRegX+4,valRegY+i,1); }
+                if( (readvalue & 0b00000100)!=0 ){ chip8_write_to_video(valRegX+5,valRegY+i,1); }
+                if( (readvalue & 0b00000010)!=0 ){ chip8_write_to_video(valRegX+6,valRegY+i,1); }
+                if( (readvalue & 0b00000001)!=0 ){ chip8_write_to_video(valRegX+7,valRegY+i,1); }
             }
             hardware->pc += 2;
         }else if(instruction==15&&(argument&0xFF)==0x1E){
