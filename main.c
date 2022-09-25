@@ -43,8 +43,10 @@ int chip8_load_file_in_casette(uint8_t *path){
     if(!bestand){
         return 0;
     }
-    fseek(bestand,0,SEEK_END);
-    long filesize = ftell(bestand);
+    long filesize = fseek(bestand,0,SEEK_END);
+    #ifndef __SANDEROSUSB
+        filesize = ftell(bestand);
+    #endif
     if(filesize<1){
         fclose(bestand);
         return 0;
